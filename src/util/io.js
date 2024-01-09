@@ -16,37 +16,46 @@ export const extToType = Object.entries(extensionMap).reduce((a, e) => {
   return a
 }, {})
 
-export const encodeForCorsProxy = (url, query) => {
-  const parts = url.split('?')
-  url = parts[0]
-  query = query || parts[1]
-  const proxy = process.env.VUE_APP_CORS_PROXY
-  const encode = process.env.VUE_APP_CORS_PROXY_ENCODE === 'true'
-  const querySep = process.env.VUE_APP_CORS_PROXY_QUERY_SEPARATOR
-  // const querySep = proxy.match(/\?/) ? '&' : '?'
-  if (encode) {
-    return proxy + encodeURIComponent(url + (query ? '?' + query : ''))
-  } else {
-    return proxy + url + (query ? querySep + query : '')
-  }
-}
-export const corsProxyHeaders = () => {
-  const headerJson = process.env.VUE_APP_CORS_PROXY_HEADERS
-  if (headerJson) {
-    try {
-      const headers = JSON.parse(headerJson)
-      if (
-        typeof headers === 'object' &&
-        !Array.isArray(headers) &&
-        Object.keys(headers).length
-      ) {
-        return headers
-      }
-    } catch (e) {
-      console.error('Invalid JSON for VUE_APP_CORS_PROXY_HEADERS', headerJson)
+export const httpGet = (url, query) => {
+  // GET an HTTP URL, returning a promise from `fetch`.
+
+  function encodeForCorsProxy(url, query) {
+    const parts = url.split('?')
+    url = parts[0]
+    query = query || parts[1]
+    const proxy = process.env.VUE_APP_CORS_PROXY
+    const encode = process.env.VUE_APP_CORS_PROXY_ENCODE === 'true'
+    const querySep = process.env.VUE_APP_CORS_PROXY_QUERY_SEPARATOR
+    // const querySep = proxy.match(/\?/) ? '&' : '?'
+    if (encode) {
+      return proxy + encodeURIComponent(url + (query ? '?' + query : ''))
+    } else {
+      return proxy + url + (query ? querySep + query : '')
     }
   }
-  return {}
+  function corsProxyHeaders() {
+    const headerJson = process.env.VUE_APP_CORS_PROXY_HEADERS
+    if (headerJson) {
+      try {
+        const headers = JSON.parse(headerJson)
+        if (
+          typeof headers === 'object' &&
+          !Array.isArray(headers) &&
+          Object.keys(headers).length
+        ) {
+          return headers
+        }
+      } catch (e) {
+        console.error('Invalid JSON for VUE_APP_CORS_PROXY_HEADERS', headerJson)
+      }
+    }
+    return {}
+  }
+
+  return fetch(
+    encodeForCorsProxy(url, query),
+    { headers: corsProxyHeaders() }
+  );
 }
 
 export const buildHref = (item, smaller, validator) => {
@@ -127,9 +136,7 @@ function numPad(val, len) {
 
 export async function downloadEosFile(file, smaller) {
   const url = buildHref(file, smaller)
-  const response = await fetch(encodeForCorsProxy(url), {
-    headers: corsProxyHeaders(),
-  })
+  const response = await httpGet(url);
   const blob = await response.blob()
   const content = await readBlob(blob)
   file.href = content

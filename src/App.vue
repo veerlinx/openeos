@@ -233,8 +233,7 @@ import {
   downloadObjectAsJson,
   downloadEosFile,
   convertToValidFilename,
-  encodeForCorsProxy,
-  corsProxyHeaders,
+  httpGet,
   FIX_POLLUTION,
   getFormattedDateForFile,
   acronym,
@@ -555,15 +554,12 @@ export default {
     },
     getRemoteScript(uri) {
       this.loading = true
-      fetch(
-        encodeForCorsProxy(
-          'https://milovana.com/webteases/geteosscript.php',
-          `id=${uri}&${FIX_POLLUTION}` +
-            (this.previewMode
-              ? '&ncpreview=' + this.previewMode
-              : '&cacheable&_nc=' + Math.floor(Date.now() / 1000 / 60))
-        ),
-        { headers: corsProxyHeaders() }
+      httpGet(
+        'https://milovana.com/webteases/geteosscript.php',
+        `id=${uri}&${FIX_POLLUTION}` +
+          (this.previewMode
+            ? '&ncpreview=' + this.previewMode
+            : '&cacheable&_nc=' + Math.floor(Date.now() / 1000 / 60))
       )
         .then(response => response.json())
         .then(script => {
@@ -585,15 +581,12 @@ export default {
           }
         })
         .catch(e => {
-          fetch(
-            encodeForCorsProxy(
-              `https://milovana.com/webteases/showtease.php`,
-              `&id=${uri}&${FIX_POLLUTION}` +
-                (this.previewMode
-                  ? '&preview=' + this.previewMode
-                  : '&cacheable&_nc=' + Math.floor(Date.now() / 1000 / 60))
-            ),
-            { headers: corsProxyHeaders() }
+          httpGet(
+            `https://milovana.com/webteases/showtease.php`,
+            `&id=${uri}&${FIX_POLLUTION}` +
+              (this.previewMode
+                ? '&preview=' + this.previewMode
+                : '&cacheable&_nc=' + Math.floor(Date.now() / 1000 / 60))
           )
             .then(response => response.text())
             .then(contents => {
@@ -618,15 +611,12 @@ export default {
         })
     },
     getRemoteScriptName(uri, script) {
-      fetch(
-        encodeForCorsProxy(
-          `https://milovana.com/webteases/showtease.php`,
-          `id=${uri}&${FIX_POLLUTION}` +
-            (this.previewMode
-              ? '&ncpreview=' + this.previewMode
-              : '&cacheable&_nc=' + Math.floor(Date.now() / 1000 / 60))
-        ),
-        { headers: corsProxyHeaders() }
+      httpGet(
+        `https://milovana.com/webteases/showtease.php`,
+        `id=${uri}&${FIX_POLLUTION}` +
+          (this.previewMode
+            ? '&ncpreview=' + this.previewMode
+            : '&cacheable&_nc=' + Math.floor(Date.now() / 1000 / 60))
       )
         .then(response => response.text())
         .then(contents => {
