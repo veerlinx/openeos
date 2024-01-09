@@ -576,7 +576,7 @@ export default {
           }
           this.loading = false
         } else {
-          this.getRemoteScriptName(teaseId, script)
+          this.setFieldsFromScript(teaseId, script)
         }
       } catch (e) {
         // Tease script not found - found out why.
@@ -608,7 +608,7 @@ export default {
         }
       }
     },
-    async getRemoteScriptName(teaseId, script) {
+    async setFieldsFromScript(teaseId, script) {
       try {
         const response = await httpGet(
           `https://milovana.com/webteases/showtease.php`,
