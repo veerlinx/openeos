@@ -536,7 +536,7 @@ export default {
       this.hasStorage = false
       this.easeStarted = false
       if (this.loading) return
-      const uri = this.parseTeaseURI()
+      const uri = this.getIdFromTeaseUrl(this.teaseUrl || '')
       if (!uri) {
         this.error = 'Invalid tease URL'
       } else {
@@ -548,9 +548,10 @@ export default {
       this.isFullscreen = true
       requestAnimationFrame(() => this.$refs.mainPlayer.$el.requestFullscreen())
     },
-    parseTeaseURI() {
-      var teaseId = (this.teaseUrl || '').match(/id=([0-9a-z]+.*)/i)
-      return (teaseId && teaseId[1]) || ''
+    getIdFromTeaseUrl(teaseUrl) {
+      const match = teaseUrl.match(/id=([0-9a-z]+.*)/i)
+      const teaseId = (match && match[1]) || ''
+      return teaseId
     },
     getRemoteScript(uri) {
       this.loading = true
