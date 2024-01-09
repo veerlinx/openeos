@@ -552,11 +552,11 @@ export default {
       const teaseId = (match && match[1]) || ''
       return teaseId
     },
-    getRemoteScript(uri) {
+    getRemoteScript(teaseId) {
       this.loading = true
       httpGet(
         'https://milovana.com/webteases/geteosscript.php',
-        `id=${uri}&${FIX_POLLUTION}` +
+        `id=${teaseId}&${FIX_POLLUTION}` +
           (this.previewMode
             ? '&ncpreview=' + this.previewMode
             : '&cacheable&_nc=' + Math.floor(Date.now() / 1000 / 60))
@@ -577,13 +577,14 @@ export default {
 
             this.loading = false
           } else {
-            this.getRemoteScriptName(uri, script)
+            this.getRemoteScriptName(teaseId, script)
           }
         })
         .catch(e => {
+          // Tease script not found, found out why.
           httpGet(
             `https://milovana.com/webteases/showtease.php`,
-            `&id=${uri}&${FIX_POLLUTION}` +
+            `&id=${teaseId}&${FIX_POLLUTION}` +
               (this.previewMode
                 ? '&preview=' + this.previewMode
                 : '&cacheable&_nc=' + Math.floor(Date.now() / 1000 / 60))
@@ -610,10 +611,10 @@ export default {
             })
         })
     },
-    getRemoteScriptName(uri, script) {
+    getRemoteScriptName(teaseId, script) {
       httpGet(
         `https://milovana.com/webteases/showtease.php`,
-        `id=${uri}&${FIX_POLLUTION}` +
+        `id=${teaseId}&${FIX_POLLUTION}` +
           (this.previewMode
             ? '&ncpreview=' + this.previewMode
             : '&cacheable&_nc=' + Math.floor(Date.now() / 1000 / 60))
