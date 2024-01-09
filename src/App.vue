@@ -552,98 +552,94 @@ export default {
       const teaseId = (match && match[1]) || ''
       return teaseId
     },
-    getRemoteScript(teaseId) {
+    async getRemoteScript(teaseId) {
       this.loading = true
-      httpGet(
-        'https://milovana.com/webteases/geteosscript.php',
-        `id=${teaseId}&${FIX_POLLUTION}` +
-          (this.previewMode
-            ? '&ncpreview=' + this.previewMode
-            : '&cacheable&_nc=' + Math.floor(Date.now() / 1000 / 60))
-      )
-        .then(response => response.json())
-        .then(script => {
-          if (
-            !script ||
-            !script.pages ||
-            (script.modules && script.modules.nyx)
-          ) {
-            if (script.modules && script.modules.nyx) {
-              this.error = 'Sorry, NYX teases are not supported.'
-            } else {
-              this.error =
-                'Does not appear to be a valid EOS tease (Invalid Definitions)'
-            }
-
-            this.loading = false
+      try {
+        const response = await httpGet(
+          'https://milovana.com/webteases/geteosscript.php',
+          `id=${teaseId}&${FIX_POLLUTION}` +
+            (this.previewMode
+              ? '&ncpreview=' + this.previewMode
+              : '&cacheable&_nc=' + Math.floor(Date.now() / 1000 / 60))
+        )
+        const script = await response.json()
+        if (
+          !script ||
+          !script.pages ||
+          (script.modules && script.modules.nyx)
+        ) {
+          if (script.modules && script.modules.nyx) {
+            this.error = 'Sorry, NYX teases are not supported.'
           } else {
-            this.getRemoteScriptName(teaseId, script)
+            this.error =
+              'Does not appear to be a valid EOS tease (Invalid Definitions)'
           }
-        })
-        .catch(e => {
-          // Tease script not found, found out why.
-          httpGet(
+          this.loading = false
+        } else {
+          this.getRemoteScriptName(teaseId, script)
+        }
+      } catch (e) {
+        // Tease script not found - found out why.
+        try {
+          const response = await httpGet(
             `https://milovana.com/webteases/showtease.php`,
             `&id=${teaseId}&${FIX_POLLUTION}` +
               (this.previewMode
                 ? '&preview=' + this.previewMode
                 : '&cacheable&_nc=' + Math.floor(Date.now() / 1000 / 60))
           )
-            .then(response => response.text())
-            .then(contents => {
-              console.log('Looking for old-school tease', contents)
-              this.loading = false
-              if (
-                parser
-                  .parseFromString(contents, 'text/html')
-                  .getElementById('tease_title')
-              ) {
-                this.error = 'Sorry, classic teases are not supported.'
-              } else {
-                throw e
-              }
-            })
-            .catch(() => {
-              this.error =
-                'Does not appear to be a valid EOS tease (Invalid JSON)'
-              console.error('JSON response error', e)
-              this.loading = false
-            })
-        })
-    },
-    getRemoteScriptName(teaseId, script) {
-      httpGet(
-        `https://milovana.com/webteases/showtease.php`,
-        `id=${teaseId}&${FIX_POLLUTION}` +
-          (this.previewMode
-            ? '&ncpreview=' + this.previewMode
-            : '&cacheable&_nc=' + Math.floor(Date.now() / 1000 / 60))
-      )
-        .then(response => response.text())
-        .then(contents => {
+          const contents = await response.text()
+          console.log('Looking for old-school tease', contents)
           this.loading = false
-          // console.log('HTML response', contents)
-          try {
-            const doc = parser
+          if (
+            parser
               .parseFromString(contents, 'text/html')
-              .getElementsByTagName('body')[0]
-            this.title = doc.getAttribute('data-title')
-            this.author = doc.getAttribute('data-author')
-            this.authorId = doc.getAttribute('data-author-id')
-            this.teaseId = doc.getAttribute('data-tease-id')
-            this.teaseKey = doc.getAttribute('data-key')
-            if (this.title) document.title = this.title
-            this.script = script
-          } catch (e) {
-            console.error('Error parseing EOS HTML', e)
-            this.title = 'Error Getting Title'
+              .getElementById('tease_title')
+          ) {
+            this.error = 'Sorry, classic teases are not supported.'
+          } else {
+            throw e
           }
-        })
-        .catch(e => {
-          this.error = 'Error loading tease HTML from Milovana'
-          console.error('HTML response error', e)
+        } catch (e) {
+          this.error =
+            'Does not appear to be a valid EOS tease (Invalid JSON)'
+          console.error('JSON response error', e)
           this.loading = false
-        })
+        }
+      }
+    },
+    async getRemoteScriptName(teaseId, script) {
+      try {
+        const response = await httpGet(
+          `https://milovana.com/webteases/showtease.php`,
+          `id=${teaseId}&${FIX_POLLUTION}` +
+            (this.previewMode
+              ? '&ncpreview=' + this.previewMode
+              : '&cacheable&_nc=' + Math.floor(Date.now() / 1000 / 60))
+        )
+        const contents = await response.text()
+        this.loading = false
+        // console.log('HTML response', contents)
+        try {
+          const doc = parser
+            .parseFromString(contents, 'text/html')
+            .getElementsByTagName('body')[0]
+          this.title = doc.getAttribute('data-title')
+          this.author = doc.getAttribute('data-author')
+          this.authorId = doc.getAttribute('data-author-id')
+          this.teaseId = doc.getAttribute('data-tease-id')
+          this.teaseKey = doc.getAttribute('data-key')
+          if (this.title) document.title = this.title
+          this.script = script
+        } catch (e) {
+          console.error('Error parseing EOS HTML', e)
+          this.title = 'Error Getting Title'
+        }
+      } catch (e) {
+        this.error = 'Error loading tease HTML from Milovana'
+        console.error('HTML response error', e)
+        this.loading = false
+      }
     },
   },
 }
